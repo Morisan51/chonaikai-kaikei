@@ -1,0 +1,183 @@
+/* =============================================
+   町内会計管理アプリ - スタイルシート
+   Phase 1: 基本デザイン
+   ============================================= */
+
+/* ----- 全体のリセット・共通設定 ----- */
+* {
+  /* すべての要素のデフォルト余白をリセットする */
+  margin: 0;
+  padding: 0;
+  /* ボックスの幅計算方法を「枠線込みの幅」に統一する */
+  box-sizing: border-box;
+}
+
+body {
+  /* フォントを日本語向けのゴシック体に設定する */
+  font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+  /* 背景色：薄いグレー */
+  background-color: #f5f5f5;
+  /* 文字色：濃いグレー（黒より読みやすい） */
+  color: #333;
+  /* 行間を文字サイズの1.6倍にして読みやすくする */
+  line-height: 1.6;
+}
+
+/* ----- ヘッダー ----- */
+.header {
+  /* 背景色：緑（町内会らしい落ち着いた色） */
+  background-color: #2e7d32;
+  /* 文字色：白 */
+  color: white;
+  /* 内側の余白（上下20px、左右16px） */
+  padding: 20px 16px;
+  /* 文字を中央揃えにする */
+  text-align: center;
+}
+
+.header__title {
+  /* アプリタイトルの文字サイズ */
+  font-size: 1.6rem;
+  /* 文字の太さ：太字 */
+  font-weight: bold;
+}
+
+.header__subtitle {
+  /* サブタイトルの文字サイズを少し小さくする */
+  font-size: 0.9rem;
+  /* 少し薄くして補足感を出す */
+  opacity: 0.85;
+  /* タイトルとの間隔 */
+  margin-top: 4px;
+}
+
+/* ----- ナビゲーション（タブ） ----- */
+.nav {
+  /* 背景色：ヘッダーより濃い緑 */
+  background-color: #1b5e20;
+  /* ボタンを横並びにする */
+  display: flex;
+  /* タブを均等に広げる */
+  justify-content: space-around;
+}
+
+.nav__btn {
+  /* ボタンの背景を透明にする（ナビの色を使う） */
+  background: none;
+  /* ボタンの枠線を消す */
+  border: none;
+  /* 文字色：白 */
+  color: white;
+  /* 内側の余白（上下14px、左右8px） */
+  padding: 14px 8px;
+  /* マウスを乗せたときにカーソルを手の形にする */
+  cursor: pointer;
+  /* 文字サイズ */
+  font-size: 0.85rem;
+  /* 横幅を均等に広げる */
+  flex: 1;
+  /* 文字を中央に揃える */
+  text-align: center;
+}
+
+.nav__btn:hover {
+  /* マウスを乗せたとき：少し明るい緑に変える */
+  background-color: #2e7d32;
+}
+
+.nav__btn--active {
+  /* 選択中のタブ：明るい緑の背景 */
+  background-color: #388e3c;
+  /* 下に白いボーダーを付けて「選択中」を示す */
+  border-bottom: 3px solid white;
+  /* 太字にする */
+  font-weight: bold;
+}
+
+/* ----- メインコンテンツ ----- */
+.main {
+  /* コンテンツの最大幅（PC画面で広がりすぎないようにする） */
+  max-width: 800px;
+  /* 左右中央に配置する */
+  margin: 24px auto;
+  /* 左右に余白を付ける */
+  padding: 0 16px;
+}
+
+/* ----- タブコンテンツ（各セクション） ----- */
+.tab-content {
+  /* 通常は非表示にする */
+  display: none;
+  /* 白い背景 */
+  background-color: white;
+  /* 角を丸くする */
+  border-radius: 8px;
+  /* 内側の余白 */
+  padding: 24px;
+  /* 影を付けてカードっぽく見せる */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content--active {
+  /* 選択中のタブコンテンツだけ表示する */
+  display: block;
+}
+
+/* ----- セクションタイトル ----- */
+.section__title {
+  /* 文字サイズ */
+  font-size: 1.2rem;
+  /* 緑色にしてヘッダーと統一感を出す */
+  color: #2e7d32;
+  /* 下に余白を付ける */
+  margin-bottom: 16px;
+  /* 下線を引く */
+  border-bottom: 2px solid #e8f5e9;
+  /* 下線と文字の間隔 */
+  padding-bottom: 8px;
+}
+
+/* ----- プレースホルダーテキスト（仮の説明文） ----- */
+.placeholder-text {
+  /* 文字色：グレー（未実装であることを示す） */
+  color: #999;
+  /* テキストを中央揃えにする */
+  text-align: center;
+  /* 上下に余白を付ける */
+  padding: 40px 0;
+  /* フォントを斜体にする */
+  font-style: italic;
+}
+
+/* ----- フッター ----- */
+.footer {
+  /* 文字を中央揃えにする */
+  text-align: center;
+  /* 文字色：グレー */
+  color: #999;
+  /* 文字サイズを小さくする */
+  font-size: 0.8rem;
+  /* 上下に余白を付ける */
+  padding: 24px 0;
+}
+
+/* ----- スマートフォン向けの調整 ----- */
+@media (max-width: 480px) {
+  /* 画面幅480px以下（スマホサイズ）のときだけ適用される */
+
+  .header__title {
+    /* スマホではタイトルを少し小さくする */
+    font-size: 1.3rem;
+  }
+
+  .nav__btn {
+    /* スマホではタブの文字をさらに小さくする */
+    font-size: 0.75rem;
+    padding: 12px 4px;
+  }
+
+  .tab-content {
+    /* スマホでは内側の余白を少し狭くする */
+    padding: 16px;
+  }
+}

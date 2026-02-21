@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- 文書の種類をHTMLと宣言する -->
+<html lang="ja">
+<!-- 言語を日本語に設定する -->
+
+<head>
+  <!-- ページの設定情報（画面には表示されない） -->
+  <meta charset="UTF-8">
+  <!-- 文字コードをUTF-8（日本語対応）に設定する -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- スマホでも見やすいように画面サイズを自動調整する -->
+  <title>町内会計管理アプリ</title>
+  <!-- ブラウザのタブに表示されるタイトル -->
+  <link rel="stylesheet" href="style.css">
+  <!-- スタイルシート（デザインファイル）を読み込む -->
+</head>
+
+<body>
+  <!-- 画面に表示される内容はすべてbodyの中に書く -->
+
+  <!-- ===== ヘッダー：アプリのタイトル ===== -->
+  <header class="header">
+    <h1 class="header__title">🏘️ 町内会計管理アプリ</h1>
+    <p class="header__subtitle">26世帯の収支をかんたん管理</p>
+  </header>
+
+  <!-- ===== ナビゲーション：タブ切り替えメニュー ===== -->
+  <nav class="nav">
+    <!-- タブボタン（クリックでページ内のセクションを切り替える） -->
+    <button class="nav__btn nav__btn--active" data-tab="input">
+      ✏️ 収支入力
+    </button>
+    <button class="nav__btn" data-tab="list">
+      📋 一覧
+    </button>
+    <button class="nav__btn" data-tab="summary">
+      📊 集計
+    </button>
+    <button class="nav__btn" data-tab="export">
+      📥 CSV出力
+    </button>
+  </nav>
+
+  <!-- ===== メインコンテンツ ===== -->
+  <main class="main">
+
+    <!-- タブ1：収支入力フォーム（Phase 2で実装） -->
+    <section class="tab-content tab-content--active" id="tab-input">
+      <h2 class="section__title">収支を入力する</h2>
+      <p class="placeholder-text">Phase 2 で入力フォームを追加予定</p>
+    </section>
+
+    <!-- タブ2：収支一覧（Phase 3で実装） -->
+    <section class="tab-content" id="tab-list">
+      <h2 class="section__title">収支一覧</h2>
+      <p class="placeholder-text">Phase 3 で一覧表示を追加予定</p>
+    </section>
+
+    <!-- タブ3：集計（Phase 4で実装） -->
+    <section class="tab-content" id="tab-summary">
+      <h2 class="section__title">月別・カテゴリ別集計</h2>
+      <p class="placeholder-text">Phase 4 で集計グラフを追加予定</p>
+    </section>
+
+    <!-- タブ4：CSV出力（Phase 5で実装） -->
+    <section class="tab-content" id="tab-export">
+      <h2 class="section__title">CSV出力（総会レポート）</h2>
+      <p class="placeholder-text">Phase 5 でCSV出力機能を追加予定</p>
+    </section>
+
+  </main>
+
+  <!-- ===== フッター ===== -->
+  <footer class="footer">
+    <p>© 2025 町内会計管理アプリ</p>
+  </footer>
+
+  <!-- JavaScriptファイルを読み込む（bodyの最後に書くのが定番） -->
+  <script src="app.js"></script>
+</body>
+
+</html>
