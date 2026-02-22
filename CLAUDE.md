@@ -39,8 +39,8 @@
 
 | フェーズ | 内容 | 状態 |
 |---|---|---|
-| Phase 1 | HTML骨格・CSS基本・GitHub連携 | 未着手 |
-| Phase 2 | 収支入力フォーム | 未着手 |
+| Phase 1 | HTML骨格・CSS基本・GitHub連携 | ✅ 完了 |
+| Phase 2 | 収支入力フォーム | ✅ 完了 |
 | Phase 3 | LocalStorage保存・一覧表示・残高計算 | 未着手 |
 | Phase 4 | 月別・カテゴリ別集計 | 未着手 |
 | Phase 5 | CSV出力（総会レポート） | 未着手 |

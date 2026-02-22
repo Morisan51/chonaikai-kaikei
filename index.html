@@ -44,10 +44,64 @@
   <!-- ===== メインコンテンツ ===== -->
   <main class="main">
 
-    <!-- タブ1：収支入力フォーム（Phase 2で実装） -->
+    <!-- タブ1：収支入力フォーム（Phase 2） -->
     <section class="tab-content tab-content--active" id="tab-input">
       <h2 class="section__title">収支を入力する</h2>
-      <p class="placeholder-text">Phase 2 で入力フォームを追加予定</p>
+
+      <!-- 入力フォーム全体 -->
+      <form class="form" id="transaction-form">
+
+        <!-- 日付 -->
+        <div class="form__group">
+          <label class="form__label" for="input-date">日付 <span class="form__required">必須</span></label>
+          <input class="form__input" type="date" id="input-date" required>
+        </div>
+
+        <!-- 種別（収入 or 支出） -->
+        <div class="form__group">
+          <label class="form__label">種別 <span class="form__required">必須</span></label>
+          <div class="form__radio-group">
+            <!-- 収入ラジオボタン -->
+            <label class="form__radio-label form__radio-label--income">
+              <input type="radio" name="type" value="income" checked>
+              収入
+            </label>
+            <!-- 支出ラジオボタン -->
+            <label class="form__radio-label form__radio-label--expense">
+              <input type="radio" name="type" value="expense">
+              支出
+            </label>
+          </div>
+        </div>
+
+        <!-- カテゴリ（種別に応じて選択肢が変わる） -->
+        <div class="form__group">
+          <label class="form__label" for="input-category">カテゴリ <span class="form__required">必須</span></label>
+          <select class="form__select" id="input-category" required>
+            <!-- app.js から動的に選択肢を入れる -->
+          </select>
+        </div>
+
+        <!-- 金額 -->
+        <div class="form__group">
+          <label class="form__label" for="input-amount">金額（円） <span class="form__required">必須</span></label>
+          <input class="form__input" type="number" id="input-amount" min="1" placeholder="例：5000" required>
+        </div>
+
+        <!-- 摘要（任意） -->
+        <div class="form__group">
+          <label class="form__label" for="input-note">摘要 <span class="form__optional">任意</span></label>
+          <input class="form__input" type="text" id="input-note" placeholder="例：1月分、〇〇購入">
+        </div>
+
+        <!-- 登録ボタン -->
+        <button class="form__submit" type="submit">登録する</button>
+
+      </form>
+
+      <!-- 登録後のメッセージ表示エリア（初期は非表示） -->
+      <p class="form__message" id="form-message"></p>
+
     </section>
 
     <!-- タブ2：収支一覧（Phase 3で実装） -->
