@@ -124,6 +124,11 @@ function switchTab(tabName) {
     activeContent.classList.add("tab-content--active");
   }
 
+  // 集計タブに切り替わったとき、集計データを最新化する
+  if (tabName === "summary") {
+    summarize();
+  }
+
   // コンソールにどのタブに切り替わったか記録する（デバッグ用）
   console.log("タブ切り替え：" + tabName);
 
@@ -543,11 +548,161 @@ function calcBalance() {
 }
 
 // =============================================
-// Phase 4 以降で追加予定の関数（現在は空）
+// Phase 4：集計タブの表示を更新するメイン関数
 // =============================================
+function summarize() {
 
-// 月別・カテゴリ別に集計する関数（Phase 4で実装）
-// function summarize() { ... }
+  // 全データを読み込む
+  const transactions = loadTransactions();
+
+  // データなしメッセージと集計コンテンツの要素を取得する
+  const noData = document.getElementById("summary-no-data");
+  const content = document.getElementById("summary-content");
+
+  // データが0件の場合は「データなし」を表示して終了する
+  if (transactions.length === 0) {
+    noData.style.display = "block";
+    content.style.display = "none";
+    return;
+  }
+
+  // データがある場合は集計コンテンツを表示する
+  noData.style.display = "none";
+  content.style.display = "block";
+
+  // 月別集計を表示する
+  renderMonthlyTable(transactions);
+
+  // カテゴリ別集計（収入・支出）を表示する
+  renderCategoryChart(transactions, "income");
+  renderCategoryChart(transactions, "expense");
+
+}
+
+// =============================================
+// Phase 4：月別集計テーブルを作る
+// 引数 transactions：全収支データの配列
+// =============================================
+function renderMonthlyTable(transactions) {
+
+  // 月ごとに収入・支出を集計するオブジェクトを作る
+  // 例：{ "2025-01": { income: 5000, expense: 3000 }, ... }
+  const monthlyMap = {};
+
+  transactions.forEach(function (item) {
+    // 日付から「年-月」部分だけを取り出す（例："2025-01"）
+    const month = item.date.slice(0, 7);
+
+    // その月のデータがなければ初期化する
+    if (!monthlyMap[month]) {
+      monthlyMap[month] = { income: 0, expense: 0 };
+    }
+
+    // 種別に応じて収入・支出を加算する
+    if (item.type === "income") {
+      monthlyMap[month].income += item.amount;
+    } else {
+      monthlyMap[month].expense += item.amount;
+    }
+  });
+
+  // 月のキー一覧を新しい順に並べる
+  const months = Object.keys(monthlyMap).sort(function (a, b) {
+    return b.localeCompare(a);
+  });
+
+  // tbodyを取得してリセットする
+  const tbody = document.getElementById("monthly-tbody");
+  tbody.innerHTML = "";
+
+  // 月ごとに行を作る
+  months.forEach(function (month) {
+    const income = monthlyMap[month].income;
+    const expense = monthlyMap[month].expense;
+    const net = income - expense;
+
+    // 収支のスタイルを決める（プラスは緑、マイナスは赤）
+    const netClass = net >= 0 ? "monthly-plus" : "monthly-minus";
+    const netSign = net >= 0 ? "+" : "";
+
+    // 行を作ってtbodyに追加する
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + month + "</td>" +
+      "<td class='table__amount--income'>+¥" + income.toLocaleString() + "</td>" +
+      "<td class='table__amount--expense'>-¥" + expense.toLocaleString() + "</td>" +
+      "<td class='" + netClass + "'>" + netSign + "¥" + net.toLocaleString() + "</td>";
+
+    tbody.appendChild(tr);
+  });
+
+}
+
+// =============================================
+// Phase 4：カテゴリ別集計バーチャートを作る
+// 引数 transactions：全収支データの配列
+// 引数 type："income"（収入）or "expense"（支出）
+// =============================================
+function renderCategoryChart(transactions, type) {
+
+  // 種別でデータを絞り込む
+  const filtered = transactions.filter(function (item) {
+    return item.type === type;
+  });
+
+  // カテゴリごとに金額を集計するオブジェクトを作る
+  const categoryMap = {};
+  filtered.forEach(function (item) {
+    if (!categoryMap[item.category]) {
+      categoryMap[item.category] = 0;
+    }
+    categoryMap[item.category] += item.amount;
+  });
+
+  // 金額の多い順に並べる
+  const categories = Object.keys(categoryMap).sort(function (a, b) {
+    return categoryMap[b] - categoryMap[a];
+  });
+
+  // 最大金額（バーの幅100%の基準）を求める
+  const maxAmount = categories.length > 0 ? categoryMap[categories[0]] : 1;
+
+  // 表示先のコンテナ要素を取得してリセットする
+  const containerId = (type === "income") ? "income-category-chart" : "expense-category-chart";
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  // データが0件の場合は「なし」と表示する
+  if (categories.length === 0) {
+    container.innerHTML = "<p style='color:#999; font-size:0.85rem;'>データなし</p>";
+    return;
+  }
+
+  // カテゴリごとにバーチャートの行を作る
+  categories.forEach(function (category) {
+    const amount = categoryMap[category];
+
+    // バーの幅を最大金額に対する割合（%）で計算する
+    const barWidth = Math.round((amount / maxAmount) * 100);
+
+    // バーのクラスを種別で決める
+    const barClass = (type === "income") ? "chart-row__bar--income" : "chart-row__bar--expense";
+    const amountClass = (type === "income") ? "chart-row__amount--income" : "chart-row__amount--expense";
+
+    // 行のHTML要素を作る
+    const row = document.createElement("div");
+    row.className = "chart-row";
+    row.innerHTML =
+      "<span class='chart-row__label'>" + category + "</span>" +
+      "<div class='chart-row__bar-wrap'>" +
+        "<div class='chart-row__bar " + barClass + "' style='width:" + barWidth + "%'></div>" +
+      "</div>" +
+      "<span class='chart-row__amount " + amountClass + "'>¥" + amount.toLocaleString() + "</span>";
+
+    container.appendChild(row);
+  });
+
+}
 
 // CSVファイルを出力する関数（Phase 5で実装）
 // function exportCSV() { ... }

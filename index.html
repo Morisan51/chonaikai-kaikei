@@ -146,10 +146,42 @@
 
     </section>
 
-    <!-- タブ3：集計（Phase 4で実装） -->
+    <!-- タブ3：集計（Phase 4） -->
     <section class="tab-content" id="tab-summary">
       <h2 class="section__title">月別・カテゴリ別集計</h2>
-      <p class="placeholder-text">Phase 4 で集計グラフを追加予定</p>
+
+      <!-- データなしメッセージ（初期表示） -->
+      <p class="placeholder-text" id="summary-no-data">まだデータがありません。収支入力タブから登録してください。</p>
+
+      <!-- 集計コンテンツ（データあり時に表示） -->
+      <div id="summary-content" style="display:none;">
+
+        <!-- 月別集計 -->
+        <h3 class="summary__subtitle">月別集計</h3>
+        <div class="table-wrap">
+          <table class="table" id="monthly-table">
+            <thead>
+              <tr>
+                <th>月</th>
+                <th>収入</th>
+                <th>支出</th>
+                <th>収支</th>
+              </tr>
+            </thead>
+            <tbody id="monthly-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- カテゴリ別集計（収入） -->
+        <h3 class="summary__subtitle" style="margin-top:32px;">カテゴリ別集計（収入）</h3>
+        <div id="income-category-chart"></div>
+
+        <!-- カテゴリ別集計（支出） -->
+        <h3 class="summary__subtitle" style="margin-top:32px;">カテゴリ別集計（支出）</h3>
+        <div id="expense-category-chart"></div>
+
+      </div>
+
     </section>
 
     <!-- タブ4：CSV出力（Phase 5で実装） -->
