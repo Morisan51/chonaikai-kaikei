@@ -2,6 +2,7 @@
 // 町内会計管理アプリ - メインロジック
 // Phase 1: 基本構造・タブ切り替え
 // Phase 2: 収支入力フォーム
+// Phase 3: LocalStorage保存・一覧表示・残高計算
 // =============================================
 
 // =============================================
@@ -44,6 +45,10 @@ function init() {
 
   // 今日の日付を日付入力欄の初期値にセットする
   setTodayDate();
+
+  // 一覧タブの表示を更新する（保存済みデータを読み込む）
+  renderList();
+  calcBalance();
 
   // コンソールにメッセージを表示して起動確認する
   // （ブラウザのF12開発者ツール > コンソールで確認できる）
@@ -267,6 +272,13 @@ function handleFormSubmit() {
   // コンソールにデータを表示する（確認用）
   console.log("登録データ：", transaction);
 
+  // ---- LocalStorage にデータを保存する ----
+  saveTransaction(transaction);
+
+  // ---- 一覧と残高を更新する ----
+  renderList();
+  calcBalance();
+
   // ---- 成功メッセージを表示する ----
   const typeLabel = (type === "income") ? "収入" : "支出";
   showMessage(
@@ -344,17 +356,195 @@ function resetForm() {
 }
 
 // =============================================
-// Phase 3 以降で追加予定の関数（現在は空）
+// Phase 3：LocalStorage のキー名（固定値）
 // =============================================
 
-// 収支データをLocalStorageに保存する関数（Phase 3で実装）
-// function saveTransaction(data) { ... }
+// データを保存するときのキー名
+// この名前でブラウザにデータが保存される
+const STORAGE_KEY = "chonaikai_transactions";
 
-// 収支データを一覧表示する関数（Phase 3で実装）
-// function renderList() { ... }
+// =============================================
+// Phase 3：全データをLocalStorageから読み込む
+// 戻り値：収支データの配列（なければ空配列）
+// =============================================
+function loadTransactions() {
 
-// 残高を計算する関数（Phase 3で実装）
-// function calcBalance() { ... }
+  // LocalStorage から文字列データを取得する
+  // キーが存在しない場合は null が返る
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  // null の場合は空配列を返す
+  if (!raw) return [];
+
+  // JSON文字列を JavaScript の配列に変換して返す
+  return JSON.parse(raw);
+
+}
+
+// =============================================
+// Phase 3：1件のデータをLocalStorageに保存する
+// 引数 transaction：登録する収支データ（オブジェクト）
+// =============================================
+function saveTransaction(transaction) {
+
+  // 既存のデータを全件読み込む
+  const transactions = loadTransactions();
+
+  // 新しいデータを配列の末尾に追加する
+  transactions.push(transaction);
+
+  // 配列全体をJSON文字列に変換してLocalStorageに保存する
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+  console.log("保存完了。件数：" + transactions.length);
+
+}
+
+// =============================================
+// Phase 3：指定したIDのデータをLocalStorageから削除する
+// 引数 id：削除するデータのID
+// =============================================
+function deleteTransaction(id) {
+
+  // 全データを読み込む
+  const transactions = loadTransactions();
+
+  // 指定したID以外のデータだけを残す（filterで絞り込む）
+  // filter は条件を満たすものだけを新しい配列にして返す
+  const filtered = transactions.filter(function (item) {
+    return item.id !== id;
+  });
+
+  // 削除後のデータをLocalStorageに上書き保存する
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+
+  // 一覧と残高を更新する
+  renderList();
+  calcBalance();
+
+  console.log("削除完了。ID：" + id);
+
+}
+
+// =============================================
+// Phase 3：一覧タブに収支データを表示する
+// =============================================
+function renderList() {
+
+  // tbody（テーブルの本体）を取得する
+  const tbody = document.getElementById("transaction-tbody");
+
+  // 「データなし」メッセージ要素を取得する
+  const noDataMsg = document.getElementById("no-data-message");
+
+  // 全データを読み込む
+  const transactions = loadTransactions();
+
+  // データが0件の場合は「データなし」メッセージを表示して終了する
+  if (transactions.length === 0) {
+    tbody.innerHTML = "";
+    noDataMsg.style.display = "block";
+    return;
+  }
+
+  // データがある場合は「データなし」メッセージを非表示にする
+  noDataMsg.style.display = "none";
+
+  // 日付の新しい順に並び替える（sort で配列を並べ替える）
+  const sorted = transactions.slice().sort(function (a, b) {
+    // 日付の文字列を比較する（新しい方が先）
+    return b.date.localeCompare(a.date);
+  });
+
+  // tbody の中身をリセットする
+  tbody.innerHTML = "";
+
+  // データを1件ずつ行として追加する
+  sorted.forEach(function (item) {
+
+    // <tr>（テーブルの行）要素を作る
+    const tr = document.createElement("tr");
+
+    // 金額を「1,000」のようなカンマ区切りに整形する
+    const amountFormatted = item.amount.toLocaleString();
+
+    // 種別に応じてバッジとスタイルを決める
+    const isIncome = (item.type === "income");
+    const badgeClass = isIncome ? "table__badge--income" : "table__badge--expense";
+    const badgeText = isIncome ? "収入" : "支出";
+    const amountClass = isIncome ? "table__amount--income" : "table__amount--expense";
+    const amountSign = isIncome ? "+" : "-";
+
+    // 行のHTMLを作る（各セルの内容を設定する）
+    tr.innerHTML =
+      "<td>" + item.date + "</td>" +
+      "<td><span class='table__badge " + badgeClass + "'>" + badgeText + "</span></td>" +
+      "<td>" + item.category + "</td>" +
+      "<td class='" + amountClass + "'>" + amountSign + "¥" + amountFormatted + "</td>" +
+      "<td>" + (item.note || "—") + "</td>" +
+      "<td><button class='table__delete-btn' data-id='" + item.id + "'>削除</button></td>";
+
+    // 行をtbodyに追加する
+    tbody.appendChild(tr);
+
+  });
+
+  // 削除ボタンにクリック処理を登録する
+  // （行を追加した後に登録する必要がある）
+  const deleteButtons = tbody.querySelectorAll(".table__delete-btn");
+  deleteButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      // ボタンの data-id 属性からIDを取得する
+      const id = btn.dataset.id;
+      // 削除確認ダイアログを表示する
+      if (confirm("このデータを削除しますか？")) {
+        deleteTransaction(id);
+      }
+    });
+  });
+
+}
+
+// =============================================
+// Phase 3：残高（収入合計・支出合計・差引）を計算して表示する
+// =============================================
+function calcBalance() {
+
+  // 全データを読み込む
+  const transactions = loadTransactions();
+
+  // 収入合計を計算する（type が "income" のものだけを合計）
+  // reduce は配列を1つの値にまとめる関数
+  const totalIncome = transactions
+    .filter(function (item) { return item.type === "income"; })
+    .reduce(function (sum, item) { return sum + item.amount; }, 0);
+
+  // 支出合計を計算する（type が "expense" のものだけを合計）
+  const totalExpense = transactions
+    .filter(function (item) { return item.type === "expense"; })
+    .reduce(function (sum, item) { return sum + item.amount; }, 0);
+
+  // 残高（収入合計 − 支出合計）を計算する
+  const netBalance = totalIncome - totalExpense;
+
+  // 各要素に金額を表示する（toLocaleString でカンマ区切りにする）
+  document.getElementById("total-income").textContent = "¥" + totalIncome.toLocaleString();
+  document.getElementById("total-expense").textContent = "¥" + totalExpense.toLocaleString();
+  document.getElementById("total-net").textContent = "¥" + netBalance.toLocaleString();
+
+  // 残高がマイナスの場合は赤色にする
+  const netEl = document.getElementById("total-net");
+  if (netBalance < 0) {
+    netEl.classList.add("balance__amount--negative");
+  } else {
+    netEl.classList.remove("balance__amount--negative");
+  }
+
+}
+
+// =============================================
+// Phase 4 以降で追加予定の関数（現在は空）
+// =============================================
 
 // 月別・カテゴリ別に集計する関数（Phase 4で実装）
 // function summarize() { ... }

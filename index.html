@@ -104,10 +104,46 @@
 
     </section>
 
-    <!-- タブ2：収支一覧（Phase 3で実装） -->
+    <!-- タブ2：収支一覧（Phase 3） -->
     <section class="tab-content" id="tab-list">
       <h2 class="section__title">収支一覧</h2>
-      <p class="placeholder-text">Phase 3 で一覧表示を追加予定</p>
+
+      <!-- 残高サマリーエリア -->
+      <div class="balance">
+        <div class="balance__item balance__item--income">
+          <span class="balance__label">収入合計</span>
+          <span class="balance__amount" id="total-income">¥0</span>
+        </div>
+        <div class="balance__item balance__item--expense">
+          <span class="balance__label">支出合計</span>
+          <span class="balance__amount" id="total-expense">¥0</span>
+        </div>
+        <div class="balance__item balance__item--net">
+          <span class="balance__label">残高</span>
+          <span class="balance__amount" id="total-net">¥0</span>
+        </div>
+      </div>
+
+      <!-- 収支一覧テーブル -->
+      <div class="table-wrap">
+        <table class="table" id="transaction-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>種別</th>
+              <th>カテゴリ</th>
+              <th>金額</th>
+              <th>摘要</th>
+              <th>削除</th>
+            </tr>
+          </thead>
+          <!-- tbody の中身は app.js で動的に作る -->
+          <tbody id="transaction-tbody"></tbody>
+        </table>
+        <!-- データが0件のときに表示するメッセージ -->
+        <p class="placeholder-text" id="no-data-message">まだデータがありません。収支入力タブから登録してください。</p>
+      </div>
+
     </section>
 
     <!-- タブ3：集計（Phase 4で実装） -->

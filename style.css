@@ -149,6 +149,173 @@ body {
   font-style: italic;
 }
 
+/* ----- Phase 3: 残高サマリー ----- */
+
+.balance {
+  /* 3つの数値を横並びにする */
+  display: flex;
+  gap: 12px;
+  /* 下に余白を付ける */
+  margin-bottom: 24px;
+}
+
+.balance__item {
+  /* 各アイテムを均等に広げる */
+  flex: 1;
+  /* 内側の余白 */
+  padding: 16px;
+  /* 角を丸くする */
+  border-radius: 8px;
+  /* テキストを中央揃えにする */
+  text-align: center;
+}
+
+.balance__item--income {
+  /* 収入：薄い緑の背景 */
+  background-color: #e8f5e9;
+  border: 1px solid #a5d6a7;
+}
+
+.balance__item--expense {
+  /* 支出：薄い赤の背景 */
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
+}
+
+.balance__item--net {
+  /* 残高：薄い青の背景 */
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+}
+
+.balance__label {
+  /* ラベルをブロックにして上に表示する */
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.balance__amount {
+  /* 金額を大きく表示する */
+  display: block;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.balance__item--income .balance__amount {
+  /* 収入の金額：緑 */
+  color: #2e7d32;
+}
+
+.balance__item--expense .balance__amount {
+  /* 支出の金額：赤 */
+  color: #c62828;
+}
+
+.balance__item--net .balance__amount {
+  /* 残高の金額：青 */
+  color: #1565c0;
+}
+
+.balance__item--net .balance__amount--negative {
+  /* 残高がマイナスのとき：赤 */
+  color: #c62828;
+}
+
+/* ----- Phase 3: 収支一覧テーブル ----- */
+
+.table-wrap {
+  /* テーブルが横に長いときにスクロールできるようにする */
+  overflow-x: auto;
+}
+
+.table {
+  /* テーブルを横幅いっぱいに広げる */
+  width: 100%;
+  /* セルの境界線を重ねる */
+  border-collapse: collapse;
+  /* 文字サイズ */
+  font-size: 0.9rem;
+}
+
+.table th {
+  /* ヘッダー行のスタイル */
+  background-color: #f5f5f5;
+  padding: 10px 12px;
+  /* テキストを左揃えにする */
+  text-align: left;
+  /* 下線を引く */
+  border-bottom: 2px solid #ddd;
+  /* 文字色：濃いグレー */
+  color: #555;
+  /* 改行しないようにする */
+  white-space: nowrap;
+}
+
+.table td {
+  /* データ行のスタイル */
+  padding: 10px 12px;
+  /* 下線を引く */
+  border-bottom: 1px solid #eee;
+  /* 縦方向の位置を中央に揃える */
+  vertical-align: middle;
+}
+
+.table tr:hover td {
+  /* マウスを乗せたとき：薄いグレーにする */
+  background-color: #fafafa;
+}
+
+.table__badge {
+  /* 収入・支出バッジ */
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: bold;
+}
+
+.table__badge--income {
+  /* 収入バッジ：緑 */
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.table__badge--expense {
+  /* 支出バッジ：赤 */
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.table__amount--income {
+  /* 収入金額：緑 */
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.table__amount--expense {
+  /* 支出金額：赤 */
+  color: #c62828;
+  font-weight: bold;
+}
+
+.table__delete-btn {
+  /* 削除ボタン */
+  background: none;
+  border: 1px solid #ffcdd2;
+  color: #e53935;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.table__delete-btn:hover {
+  /* ホバー時：赤背景にする */
+  background-color: #ffebee;
+}
+
 /* ----- Phase 2: 入力フォーム ----- */
 
 .form {
