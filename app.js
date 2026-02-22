@@ -1,5 +1,5 @@
 // =============================================
-// 町内会計管理アプリ - メインロジック
+// 自治会会計管理アプリ - メインロジック
 // Phase 1: 基本構造・タブ切り替え
 // Phase 2: 収支入力フォーム
 // Phase 3: Supabase保存・一覧表示・残高計算
@@ -25,7 +25,7 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // =============================================
 
 // 収入カテゴリの一覧
-const INCOME_CATEGORIES = ["町内会費", "補助金", "繰越金", "その他収入"];
+const INCOME_CATEGORIES = ["自治会費", "補助金", "繰越金", "その他収入"];
 
 // 支出カテゴリの一覧
 const EXPENSE_CATEGORIES = ["行事費", "消耗品費", "通信費", "慶弔費", "その他支出"];
@@ -64,7 +64,7 @@ async function init() {
   await renderList();
   await calcBalance();
 
-  console.log("✅ 町内会計管理アプリ 起動完了（Supabase接続済み）");
+  console.log("✅ 自治会会計管理アプリ 起動完了（Supabase接続済み）");
 
 }
 
@@ -686,7 +686,7 @@ function exportCSV(transactions, label) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "町内会計_" + label + ".csv";
+  link.download = "自治会会計_" + label + ".csv";
   link.click();
   URL.revokeObjectURL(url);
 
