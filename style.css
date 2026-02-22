@@ -316,6 +316,99 @@ body {
   background-color: #ffebee;
 }
 
+/* ----- Phase 5: CSV出力 ----- */
+
+.export-info {
+  /* 説明文エリア */
+  background-color: #f9fbe7;
+  border: 1px solid #dce775;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+
+.export-info__text {
+  /* 説明文のスタイル */
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.8;
+}
+
+.export-options {
+  /* カードを縦に並べる */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-card {
+  /* 各出力オプションのカード */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fafafa;
+}
+
+.export-card__title {
+  /* カードのタイトル */
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.export-card__desc {
+  /* カードの説明文 */
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 14px;
+}
+
+.export-card__row {
+  /* セレクトとボタンを横並びにする */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.export-month-select {
+  /* 月選択セレクトボックス */
+  flex: 1;
+}
+
+.export-btn {
+  /* 出力ボタン共通スタイル */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.export-btn--all {
+  /* 全件出力ボタン：緑 */
+  background-color: #2e7d32;
+  color: white;
+  width: 100%;
+}
+
+.export-btn--all:hover {
+  background-color: #1b5e20;
+}
+
+.export-btn--month {
+  /* 月別出力ボタン：青 */
+  background-color: #1565c0;
+  color: white;
+}
+
+.export-btn--month:hover {
+  background-color: #0d47a1;
+}
+
 /* ----- Phase 4: 集計 ----- */
 
 .summary__subtitle {

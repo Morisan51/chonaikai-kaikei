@@ -129,6 +129,11 @@ function switchTab(tabName) {
     summarize();
   }
 
+  // CSV出力タブに切り替わったとき、月選択肢を最新化する
+  if (tabName === "export") {
+    setupExportTab();
+  }
+
   // コンソールにどのタブに切り替わったか記録する（デバッグ用）
   console.log("タブ切り替え：" + tabName);
 
@@ -704,5 +709,162 @@ function renderCategoryChart(transactions, type) {
 
 }
 
-// CSVファイルを出力する関数（Phase 5で実装）
-// function exportCSV() { ... }
+// =============================================
+// Phase 5：CSV出力タブの初期化
+// =============================================
+function setupExportTab() {
+
+  // 全データを読み込む
+  const transactions = loadTransactions();
+
+  // 各要素を取得する
+  const noDataMsg = document.getElementById("export-no-data");
+  const exportOptions = document.querySelector(".export-options");
+
+  // データが0件のときはボタンを隠してメッセージを表示する
+  if (transactions.length === 0) {
+    exportOptions.style.display = "none";
+    noDataMsg.style.display = "block";
+    return;
+  }
+
+  // データがあるときはボタンを表示する
+  exportOptions.style.display = "flex";
+  noDataMsg.style.display = "none";
+
+  // 月選択セレクトボックスの選択肢を更新する
+  updateMonthSelect(transactions);
+
+  // 全件出力ボタンのクリック処理を登録する
+  // （重複登録を防ぐためにonclickで上書きする）
+  document.getElementById("btn-export-all").onclick = function () {
+    exportCSV(transactions, "全件");
+  };
+
+  // 月別出力ボタンのクリック処理を登録する
+  document.getElementById("btn-export-month").onclick = function () {
+    // 選択中の月を取得する
+    const selectedMonth = document.getElementById("select-export-month").value;
+
+    // 選択した月でデータを絞り込む
+    const filtered = transactions.filter(function (item) {
+      return item.date.slice(0, 7) === selectedMonth;
+    });
+
+    exportCSV(filtered, selectedMonth);
+  };
+
+}
+
+// =============================================
+// Phase 5：月選択セレクトボックスの選択肢を生成する
+// =============================================
+function updateMonthSelect(transactions) {
+
+  // データに含まれる月の一覧を重複なしで取り出す
+  // Set は重複を自動で除外するデータ構造
+  const monthSet = new Set(
+    transactions.map(function (item) {
+      return item.date.slice(0, 7);
+    })
+  );
+
+  // 新しい順に並べる
+  const months = Array.from(monthSet).sort(function (a, b) {
+    return b.localeCompare(a);
+  });
+
+  // セレクトボックスをリセットして選択肢を追加する
+  const select = document.getElementById("select-export-month");
+  select.innerHTML = "";
+  months.forEach(function (month) {
+    const option = document.createElement("option");
+    option.value = month;
+    option.textContent = month;
+    select.appendChild(option);
+  });
+
+}
+
+// =============================================
+// Phase 5：収支データをCSVファイルとしてダウンロードする
+// 引数 transactions：出力するデータの配列
+// 引数 label：ファイル名に使うラベル（例："全件"、"2025-01"）
+// =============================================
+function exportCSV(transactions, label) {
+
+  // データが0件のときは警告して終了する
+  if (transactions.length === 0) {
+    alert("出力するデータがありません。");
+    return;
+  }
+
+  // ---- CSVの中身を作る ----
+
+  // ヘッダー行（列名）
+  const header = ["日付", "種別", "カテゴリ", "金額（円）", "摘要"];
+
+  // データ行を作る
+  const rows = transactions
+    .slice()
+    // 日付の古い順に並べる（総会資料として読みやすい順）
+    .sort(function (a, b) { return a.date.localeCompare(b.date); })
+    .map(function (item) {
+      return [
+        item.date,
+        item.type === "income" ? "収入" : "支出",
+        item.category,
+        item.amount,
+        item.note || ""
+      ];
+    });
+
+  // 合計行を計算して追加する
+  const totalIncome = transactions
+    .filter(function (i) { return i.type === "income"; })
+    .reduce(function (sum, i) { return sum + i.amount; }, 0);
+
+  const totalExpense = transactions
+    .filter(function (i) { return i.type === "expense"; })
+    .reduce(function (sum, i) { return sum + i.amount; }, 0);
+
+  // 空行を挟んでから合計行を追加する
+  rows.push(["", "", "", "", ""]);
+  rows.push(["収入合計", "", "", totalIncome, ""]);
+  rows.push(["支出合計", "", "", totalExpense, ""]);
+  rows.push(["残高", "", "", totalIncome - totalExpense, ""]);
+
+  // ヘッダーとデータ行を合わせてCSV文字列を作る
+  // 各セルはカンマで区切り、各行は改行で区切る
+  const allRows = [header].concat(rows);
+  const csvString = allRows.map(function (row) {
+    // セルの内容にカンマが含まれる場合は「"」で囲む
+    return row.map(function (cell) {
+      const str = String(cell);
+      return str.includes(",") ? '"' + str + '"' : str;
+    }).join(",");
+  }).join("\n");
+
+  // ---- ExcelでそのままCSVを開けるようにBOM（文字コードの目印）を付ける ----
+  // BOM付きUTF-8にするとExcelが文字化けせずに開ける
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csvString], { type: "text/csv;charset=utf-8;" });
+
+  // ---- ダウンロードリンクを作ってクリックする ----
+  // ブラウザのダウンロード機能を使ってファイルを保存する
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+
+  // ファイル名：「町内会計_全件.csv」や「町内会計_2025-01.csv」
+  link.download = "町内会計_" + label + ".csv";
+
+  // リンクをクリックしてダウンロードを開始する（画面には表示しない）
+  link.click();
+
+  // 使い終わったURLを解放してメモリを節約する
+  URL.revokeObjectURL(url);
+
+  console.log("CSV出力完了：" + link.download);
+
+}

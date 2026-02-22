@@ -184,10 +184,48 @@
 
     </section>
 
-    <!-- タブ4：CSV出力（Phase 5で実装） -->
+    <!-- タブ4：CSV出力（Phase 5） -->
     <section class="tab-content" id="tab-export">
       <h2 class="section__title">CSV出力（総会レポート）</h2>
-      <p class="placeholder-text">Phase 5 でCSV出力機能を追加予定</p>
+
+      <!-- 出力の説明 -->
+      <div class="export-info">
+        <p class="export-info__text">登録済みの収支データをCSVファイルで出力します。</p>
+        <p class="export-info__text">ExcelやNumbersで開いて総会資料として使用できます。</p>
+      </div>
+
+      <!-- 出力内容の選択 -->
+      <div class="export-options">
+
+        <!-- 全件出力 -->
+        <div class="export-card">
+          <h3 class="export-card__title">📄 全件出力</h3>
+          <p class="export-card__desc">登録されているすべての収支データを出力します。</p>
+          <button class="export-btn export-btn--all" id="btn-export-all">
+            CSVダウンロード（全件）
+          </button>
+        </div>
+
+        <!-- 月別出力 -->
+        <div class="export-card">
+          <h3 class="export-card__title">📅 月別出力</h3>
+          <p class="export-card__desc">指定した月のデータのみを出力します。</p>
+          <div class="export-card__row">
+            <!-- 月を選択するセレクトボックス（app.jsで選択肢を生成） -->
+            <select class="form__select export-month-select" id="select-export-month"></select>
+            <button class="export-btn export-btn--month" id="btn-export-month">
+              CSVダウンロード
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- データ0件のときのメッセージ -->
+      <p class="placeholder-text" id="export-no-data" style="display:none;">
+        データがありません。収支入力タブから登録してください。
+      </p>
+
     </section>
 
   </main>
