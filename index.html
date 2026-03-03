@@ -48,6 +48,9 @@
     <section class="tab-content tab-content--active" id="tab-input">
       <h2 class="section__title">収支を入力する</h2>
 
+      <!-- 注意書き -->
+      <p class="input-note">※ 入力を忘れても大丈夫です。後から正しい日付で入力すれば、集計やExcelファイルには自動で日付順に並んで反映されます。</p>
+
       <!-- 入力フォーム全体 -->
       <form class="form" id="transaction-form">
 
@@ -61,15 +64,15 @@
         <div class="form__group">
           <label class="form__label">種別 <span class="form__required">必須</span></label>
           <div class="form__radio-group">
-            <!-- 収入ラジオボタン -->
+            <!-- 歳入ラジオボタン -->
             <label class="form__radio-label form__radio-label--income">
               <input type="radio" name="type" value="income" checked>
-              収入
+              歳入
             </label>
-            <!-- 支出ラジオボタン -->
+            <!-- 歳出ラジオボタン -->
             <label class="form__radio-label form__radio-label--expense">
               <input type="radio" name="type" value="expense">
-              支出
+              歳出
             </label>
           </div>
         </div>
@@ -111,11 +114,11 @@
       <!-- 残高サマリーエリア -->
       <div class="balance">
         <div class="balance__item balance__item--income">
-          <span class="balance__label">収入合計</span>
+          <span class="balance__label">歳入合計</span>
           <span class="balance__amount" id="total-income">¥0</span>
         </div>
         <div class="balance__item balance__item--expense">
-          <span class="balance__label">支出合計</span>
+          <span class="balance__label">歳出合計</span>
           <span class="balance__amount" id="total-expense">¥0</span>
         </div>
         <div class="balance__item balance__item--net">
@@ -124,31 +127,16 @@
         </div>
       </div>
 
-      <!-- 収支一覧テーブル -->
-      <div class="table-wrap">
-        <table class="table" id="transaction-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>種別</th>
-              <th>カテゴリ</th>
-              <th>金額</th>
-              <th>摘要</th>
-              <th>削除</th>
-            </tr>
-          </thead>
-          <!-- tbody の中身は app.js で動的に作る -->
-          <tbody id="transaction-tbody"></tbody>
-        </table>
-        <!-- データが0件のときに表示するメッセージ -->
-        <p class="placeholder-text" id="no-data-message">まだデータがありません。収支入力タブから登録してください。</p>
-      </div>
+      <!-- 収支一覧（月別アコーディオン） -->
+      <div id="transaction-accordion"></div>
+      <!-- データが0件のときに表示するメッセージ -->
+      <p class="placeholder-text" id="no-data-message">まだデータがありません。収支入力タブから登録してください。</p>
 
     </section>
 
     <!-- タブ3：集計（Phase 4） -->
     <section class="tab-content" id="tab-summary">
-      <h2 class="section__title">月別・カテゴリ別集計</h2>
+      <h2 class="section__title">月別・項目別集計</h2>
 
       <!-- データなしメッセージ（初期表示） -->
       <p class="placeholder-text" id="summary-no-data">まだデータがありません。収支入力タブから登録してください。</p>
@@ -156,75 +144,88 @@
       <!-- 集計コンテンツ（データあり時に表示） -->
       <div id="summary-content" style="display:none;">
 
-        <!-- 月別集計 -->
+        <!-- 月別集計（アコーディオン） -->
         <h3 class="summary__subtitle">月別集計</h3>
-        <div class="table-wrap">
-          <table class="table" id="monthly-table">
-            <thead>
-              <tr>
-                <th>月</th>
-                <th>収入</th>
-                <th>支出</th>
-                <th>収支</th>
-              </tr>
-            </thead>
-            <tbody id="monthly-tbody"></tbody>
-          </table>
-        </div>
+        <p style="font-size:0.8rem; color:#999; margin-bottom:10px;">月をタップすると詳細が表示されます</p>
+        <div id="monthly-accordion"></div>
 
         <!-- カテゴリ別集計（収入） -->
-        <h3 class="summary__subtitle" style="margin-top:32px;">カテゴリ別集計（収入）</h3>
+        <h3 class="summary__subtitle" style="margin-top:32px;">項目別集計（歳入）</h3>
         <div id="income-category-chart"></div>
 
-        <!-- カテゴリ別集計（支出） -->
-        <h3 class="summary__subtitle" style="margin-top:32px;">カテゴリ別集計（支出）</h3>
+        <!-- 項目別集計（歳出） -->
+        <h3 class="summary__subtitle" style="margin-top:32px;">項目別集計（歳出）</h3>
         <div id="expense-category-chart"></div>
 
       </div>
 
     </section>
 
-    <!-- タブ4：CSV出力（Phase 5） -->
+    <!-- タブ4：出力（Phase 5） -->
     <section class="tab-content" id="tab-export">
-      <h2 class="section__title">CSV出力（総会レポート）</h2>
-
-      <!-- 出力の説明 -->
-      <div class="export-info">
-        <p class="export-info__text">登録済みの収支データをCSVファイルで出力します。</p>
-        <p class="export-info__text">ExcelやNumbersで開いて総会資料として使用できます。</p>
-      </div>
-
-      <!-- 出力内容の選択 -->
-      <div class="export-options">
-
-        <!-- 全件出力 -->
-        <div class="export-card">
-          <h3 class="export-card__title">📄 全件出力</h3>
-          <p class="export-card__desc">登録されているすべての収支データを出力します。</p>
-          <button class="export-btn export-btn--all" id="btn-export-all">
-            CSVダウンロード（全件）
-          </button>
-        </div>
-
-        <!-- 月別出力 -->
-        <div class="export-card">
-          <h3 class="export-card__title">📅 月別出力</h3>
-          <p class="export-card__desc">指定した月のデータのみを出力します。</p>
-          <div class="export-card__row">
-            <!-- 月を選択するセレクトボックス（app.jsで選択肢を生成） -->
-            <select class="form__select export-month-select" id="select-export-month"></select>
-            <button class="export-btn export-btn--month" id="btn-export-month">
-              CSVダウンロード
-            </button>
-          </div>
-        </div>
-
-      </div>
+      <h2 class="section__title">データ出力</h2>
 
       <!-- データ0件のときのメッセージ -->
       <p class="placeholder-text" id="export-no-data" style="display:none;">
         データがありません。収支入力タブから登録してください。
       </p>
+
+      <!-- 出力内容 -->
+      <div class="export-options">
+
+        <!-- ★ メイン：Excelダウンロード（一番目立つ） -->
+        <div class="export-main-card">
+          <p class="export-main-card__label">総会資料はこちら</p>
+          <h3 class="export-main-card__title">📊 総会用Excelをダウンロードする</h3>
+          <p class="export-main-card__desc">前期・後期・集計・決算書のシートが入ったExcelファイルが作成されます。</p>
+          <div class="export-main-card__row">
+            <!-- 年度を選択するセレクトボックス（app.jsで選択肢を生成） -->
+            <select class="form__select export-main-card__select" id="select-excel-year"></select>
+            <button class="export-main-btn" id="btn-export-excel">
+              Excelダウンロード
+            </button>
+          </div>
+        </div>
+
+        <!-- サブ：CSV出力（まとめて小さく） -->
+        <div class="export-sub-section">
+          <p class="export-sub-section__title">CSVファイルが必要な場合</p>
+          <div class="export-sub-row">
+
+            <!-- 全件出力 -->
+            <div class="export-card">
+              <h3 class="export-card__title">📄 全件</h3>
+              <p class="export-card__desc">すべてのデータをCSVで出力します。</p>
+              <button class="export-btn export-btn--all" id="btn-export-all">
+                CSVダウンロード（全件）
+              </button>
+            </div>
+
+            <!-- 月別出力 -->
+            <div class="export-card">
+              <h3 class="export-card__title">📅 月別</h3>
+              <p class="export-card__desc">指定した月のみCSVで出力します。</p>
+              <div class="export-card__col">
+                <select class="form__select" id="select-export-month"></select>
+                <button class="export-btn export-btn--month" id="btn-export-month">
+                  CSVダウンロード
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 年度リセット（一括削除） -->
+      <div class="reset-card">
+        <h3 class="reset-card__title">⚠️ 年度リセット（一括削除）</h3>
+        <p class="reset-card__desc">年度が変わるときに使用します。登録済みのすべてのデータを削除してゼロからスタートします。この操作は元に戻せません。</p>
+        <button class="reset-btn" id="btn-reset-all">
+          すべてのデータを削除する
+        </button>
+      </div>
 
     </section>
 
@@ -237,6 +238,10 @@
 
   <!-- Supabase：クラウドデータベースに接続するためのライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ExcelJS：罫線・書式を保持してExcelを生成するライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- FileSaver：ブラウザからファイルをダウンロードするライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <!-- JavaScriptファイルを読み込む（bodyの最後に書くのが定番） -->
   <script src="app.js"></script>
 </body>

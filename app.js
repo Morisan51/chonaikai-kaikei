@@ -24,11 +24,11 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // カテゴリデータ（収入・支出の選択肢）
 // =============================================
 
-// 収入カテゴリの一覧
-const INCOME_CATEGORIES = ["前年度繰越金", "自治会費", "助成金", "会費", "資源ゴミ回収", "手数料収入", "預金利息", "積立金", "その他"];
+// 歳入カテゴリの一覧（決算書の歳入の部に準拠）
+const INCOME_CATEGORIES = ["前年度繰越金", "自治会費", "助成金", "会費", "資源ごみ回収", "手数料収入", "預金利息", "自治会積立金"];
 
-// 支出カテゴリの一覧
-const EXPENSE_CATEGORIES = ["新年会・慰労会費", "各種会費", "協賛・助成金", "協力金・募金", "営繕・管理費", "慶弔・見舞金", "会議費", "予備・雑費等", "その他"];
+// 歳出カテゴリの一覧（決算書の歳出の部に準拠）
+const EXPENSE_CATEGORIES = ["新年会・慰労会費", "各種会費", "協賛・助成金", "協力金・募金", "営繕・管理費", "慶弔・見舞金", "会議費", "予備・雑費"];
 
 // =============================================
 // ページが完全に読み込まれてからJavaScriptを実行する
@@ -63,6 +63,9 @@ async function init() {
   // 一覧と残高をSupabaseから読み込んで表示する
   await renderList();
   await calcBalance();
+
+  // 一括削除ボタンをセットアップする
+  setupResetBtn();
 
   console.log("✅ 自治会会計管理アプリ 起動完了（Supabase接続済み）");
 
@@ -234,7 +237,7 @@ async function handleFormSubmit() {
     await calcBalance();
 
     // 成功メッセージを表示する
-    const typeLabel = (type === "income") ? "収入" : "支出";
+    const typeLabel = (type === "income") ? "歳入" : "歳出";
     showMessage(
       typeLabel + "「" + category + "」" + amount.toLocaleString() + "円 を登録しました！",
       "success"
@@ -365,57 +368,131 @@ async function deleteTransaction(id) {
 }
 
 // =============================================
-// Phase 3：一覧タブに収支データを表示する
+// Phase 3：一覧タブに収支データを月別アコーディオンで表示する
 // =============================================
 async function renderList() {
 
-  const tbody = document.getElementById("transaction-tbody");
+  const container = document.getElementById("transaction-accordion");
   const noDataMsg = document.getElementById("no-data-message");
 
   // Supabaseから全データを取得する
   const transactions = await loadTransactions();
 
+  container.innerHTML = "";
+
   if (transactions.length === 0) {
-    tbody.innerHTML = "";
     noDataMsg.style.display = "block";
     return;
   }
 
   noDataMsg.style.display = "none";
-  tbody.innerHTML = "";
 
-  // データを1件ずつ行として追加する
+  // データを月ごとにグループ化する
+  const monthlyMap = {};
   transactions.forEach(function (item) {
-
-    const tr = document.createElement("tr");
-    const amountFormatted = item.amount.toLocaleString();
-    const isIncome = (item.type === "income");
-    const badgeClass = isIncome ? "table__badge--income" : "table__badge--expense";
-    const badgeText = isIncome ? "収入" : "支出";
-    const amountClass = isIncome ? "table__amount--income" : "table__amount--expense";
-    const amountSign = isIncome ? "+" : "-";
-
-    tr.innerHTML =
-      "<td>" + item.date + "</td>" +
-      "<td><span class='table__badge " + badgeClass + "'>" + badgeText + "</span></td>" +
-      "<td>" + item.category + "</td>" +
-      "<td class='" + amountClass + "'>" + amountSign + "¥" + amountFormatted + "</td>" +
-      "<td>" + (item.note || "—") + "</td>" +
-      "<td><button class='table__delete-btn' data-id='" + item.id + "'>削除</button></td>";
-
-    tbody.appendChild(tr);
-
+    const month = item.date.slice(0, 7);
+    if (!monthlyMap[month]) {
+      monthlyMap[month] = [];
+    }
+    monthlyMap[month].push(item);
   });
 
-  // 削除ボタンにクリック処理を登録する
-  const deleteButtons = tbody.querySelectorAll(".table__delete-btn");
-  deleteButtons.forEach(function (btn) {
-    btn.addEventListener("click", async function () {
-      const id = btn.dataset.id;
-      if (confirm("このデータを削除しますか？")) {
-        await deleteTransaction(id);
-      }
+  // データから年を取得して1月〜12月の全月リストを作る
+  const years = Array.from(new Set(
+    Object.keys(monthlyMap).map(function (m) { return m.slice(0, 4); })
+  )).sort();
+
+  const months = [];
+  years.forEach(function (year) {
+    for (var m = 1; m <= 12; m++) {
+      months.push(year + "-" + (m < 10 ? "0" + m : "" + m));
+    }
+  });
+
+  // 月ごとにアコーディオンブロックを作る
+  months.forEach(function (month) {
+    const items = monthlyMap[month] || [];
+
+    const block = document.createElement("div");
+    block.className = "month-block";
+
+    // ヘッダーボタン（月名と件数を表示）
+    const btn = document.createElement("button");
+    btn.className = "month-block__btn";
+    btn.innerHTML =
+      "<span class='month-block__name'>" + month + "（" + items.length + "件）</span>" +
+      "<span class='month-block__arrow'>▼</span>";
+
+    // 詳細エリア（その月のデータテーブル・初期は非表示）
+    const detail = document.createElement("div");
+    detail.className = "month-block__detail";
+    detail.style.display = "none";
+
+    // テーブルを作る
+    const tableWrap = document.createElement("div");
+    tableWrap.className = "table-wrap";
+
+    const table = document.createElement("table");
+    table.className = "table";
+    table.innerHTML =
+      "<thead><tr>" +
+        "<th>日付</th>" +
+        "<th>種別</th>" +
+        "<th>項目</th>" +
+        "<th>金額</th>" +
+        "<th>摘要</th>" +
+        "<th>削除</th>" +
+      "</tr></thead>";
+
+    const tbody = document.createElement("tbody");
+
+    // その月のデータを日付の古い順に並べて行を追加する
+    items.slice().sort(function (a, b) {
+      return a.date.localeCompare(b.date);
+    }).forEach(function (item) {
+
+      const tr = document.createElement("tr");
+      const isIncome = (item.type === "income");
+      const badgeClass = isIncome ? "table__badge--income" : "table__badge--expense";
+      const badgeText = isIncome ? "歳入" : "歳出";
+      const amountClass = isIncome ? "table__amount--income" : "table__amount--expense";
+      const amountSign = isIncome ? "+" : "-";
+
+      tr.innerHTML =
+        "<td>" + item.date + "</td>" +
+        "<td><span class='table__badge " + badgeClass + "'>" + badgeText + "</span></td>" +
+        "<td>" + item.category + "</td>" +
+        "<td class='" + amountClass + "'>" + amountSign + "¥" + item.amount.toLocaleString() + "</td>" +
+        "<td>" + (item.note || "—") + "</td>" +
+        "<td><button class='table__delete-btn' data-id='" + item.id + "'>削除</button></td>";
+
+      tbody.appendChild(tr);
     });
+
+    // 削除ボタンにクリック処理を登録する
+    tbody.querySelectorAll(".table__delete-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        const id = btn.dataset.id;
+        if (confirm("このデータを削除しますか？")) {
+          await deleteTransaction(id);
+        }
+      });
+    });
+
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    detail.appendChild(tableWrap);
+
+    // タップで開閉する
+    btn.addEventListener("click", function () {
+      const isOpen = detail.style.display !== "none";
+      detail.style.display = isOpen ? "none" : "block";
+      btn.querySelector(".month-block__arrow").textContent = isOpen ? "▼" : "▲";
+    });
+
+    block.appendChild(btn);
+    block.appendChild(detail);
+    container.appendChild(block);
   });
 
 }
@@ -476,12 +553,12 @@ async function summarize() {
 }
 
 // =============================================
-// Phase 4：月別集計テーブルを作る
+// Phase 4：月別集計アコーディオンを作る（1つにまとめる）
 // =============================================
 function renderMonthlyTable(transactions) {
 
+  // 月ごとに歳入・歳出を集計する
   const monthlyMap = {};
-
   transactions.forEach(function (item) {
     const month = item.date.slice(0, 7);
     if (!monthlyMap[month]) {
@@ -494,16 +571,54 @@ function renderMonthlyTable(transactions) {
     }
   });
 
-  const months = Object.keys(monthlyMap).sort(function (a, b) {
-    return b.localeCompare(a);
+  // データから年を取得して1月〜12月の全月リストを作る
+  const years = Array.from(new Set(
+    Object.keys(monthlyMap).map(function (m) { return m.slice(0, 4); })
+  )).sort();
+
+  const months = [];
+  years.forEach(function (year) {
+    for (var m = 1; m <= 12; m++) {
+      months.push(year + "-" + (m < 10 ? "0" + m : m));
+    }
   });
 
-  const tbody = document.getElementById("monthly-tbody");
-  tbody.innerHTML = "";
+  const container = document.getElementById("monthly-accordion");
+  container.innerHTML = "";
 
+  // 外側のアコーディオンブロック（1つだけ）
+  const block = document.createElement("div");
+  block.className = "month-block";
+
+  // ヘッダーボタン
+  const btn = document.createElement("button");
+  btn.className = "month-block__btn";
+  btn.innerHTML =
+    "<span class='month-block__name'>月別集計を表示する</span>" +
+    "<span class='month-block__arrow'>▼</span>";
+
+  // 詳細エリア（全月のテーブルを内包する・初期は非表示）
+  const detail = document.createElement("div");
+  detail.className = "month-block__detail";
+  detail.style.display = "none";
+
+  // テーブルを作る
+  const table = document.createElement("table");
+  table.className = "table";
+  table.innerHTML =
+    "<thead><tr>" +
+      "<th>月</th>" +
+      "<th>歳入</th>" +
+      "<th>歳出</th>" +
+      "<th>収支</th>" +
+    "</tr></thead>";
+
+  const tbody = document.createElement("tbody");
+
+  // 1月〜12月を順に行を追加する（データがない月は0円）
   months.forEach(function (month) {
-    const income = monthlyMap[month].income;
-    const expense = monthlyMap[month].expense;
+    const income = monthlyMap[month] ? monthlyMap[month].income : 0;
+    const expense = monthlyMap[month] ? monthlyMap[month].expense : 0;
     const net = income - expense;
     const netClass = net >= 0 ? "monthly-plus" : "monthly-minus";
     const netSign = net >= 0 ? "+" : "";
@@ -518,6 +633,20 @@ function renderMonthlyTable(transactions) {
     tbody.appendChild(tr);
   });
 
+  table.appendChild(tbody);
+  detail.appendChild(table);
+
+  // タップで開閉する
+  btn.addEventListener("click", function () {
+    const isOpen = detail.style.display !== "none";
+    detail.style.display = isOpen ? "none" : "block";
+    btn.querySelector(".month-block__arrow").textContent = isOpen ? "▼" : "▲";
+  });
+
+  block.appendChild(btn);
+  block.appendChild(detail);
+  container.appendChild(block);
+
 }
 
 // =============================================
@@ -529,32 +658,34 @@ function renderCategoryChart(transactions, type) {
     return item.type === type;
   });
 
+  // 全項目リストを取得する（データがない項目も含めて常に表示する）
+  const allCategories = (type === "income") ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+  // 全項目を0円で初期化してから、データがある項目に金額を加算する
   const categoryMap = {};
+  allCategories.forEach(function (cat) {
+    categoryMap[cat] = 0;
+  });
   filtered.forEach(function (item) {
-    if (!categoryMap[item.category]) {
-      categoryMap[item.category] = 0;
+    if (categoryMap.hasOwnProperty(item.category)) {
+      categoryMap[item.category] += item.amount;
     }
-    categoryMap[item.category] += item.amount;
   });
 
-  const categories = Object.keys(categoryMap).sort(function (a, b) {
-    return categoryMap[b] - categoryMap[a];
-  });
+  // 項目はカテゴリ定義の順番通りに表示する
+  const categories = allCategories;
 
-  const maxAmount = categories.length > 0 ? categoryMap[categories[0]] : 1;
+  // 最大金額を求める（全項目0円の場合は1にして割り算を防ぐ）
+  const maxAmount = Math.max.apply(null, categories.map(function (c) { return categoryMap[c]; }));
+  const maxAmountSafe = maxAmount > 0 ? maxAmount : 1;
 
   const containerId = (type === "income") ? "income-category-chart" : "expense-category-chart";
   const container = document.getElementById(containerId);
   container.innerHTML = "";
 
-  if (categories.length === 0) {
-    container.innerHTML = "<p style='color:#999; font-size:0.85rem;'>データなし</p>";
-    return;
-  }
-
   categories.forEach(function (category) {
     const amount = categoryMap[category];
-    const barWidth = Math.round((amount / maxAmount) * 100);
+    const barWidth = Math.round((amount / maxAmountSafe) * 100);
     const barClass = (type === "income") ? "chart-row__bar--income" : "chart-row__bar--expense";
     const amountClass = (type === "income") ? "chart-row__amount--income" : "chart-row__amount--expense";
 
@@ -568,6 +699,53 @@ function renderCategoryChart(transactions, type) {
       "<span class='chart-row__amount " + amountClass + "'>¥" + amount.toLocaleString() + "</span>";
 
     container.appendChild(row);
+  });
+
+}
+
+// =============================================
+// 年度リセット：全件削除ボタンのセットアップ
+// =============================================
+function setupResetBtn() {
+
+  const btn = document.getElementById("btn-reset-all");
+
+  // ボタンが存在しない場合は何もしない
+  if (!btn) return;
+
+  btn.addEventListener("click", async function () {
+
+    // 1段階目の確認ダイアログ
+    const first = confirm(
+      "すべてのデータを削除して年度リセットします。\n\nこの操作は元に戻せません。\n本当に削除しますか？"
+    );
+    if (!first) return;
+
+    // 2段階目の確認ダイアログ（最終確認）
+    const second = confirm(
+      "【最終確認】\n\n登録済みのすべてのデータが完全に削除されます。\n本当によろしいですか？"
+    );
+    if (!second) return;
+
+    // Supabaseのtransactionsテーブルを全件削除する
+    // .neq("id", "") は「idが空文字でないもの」= 全件を意味する
+    const { error } = await db
+      .from("transactions")
+      .delete()
+      .neq("id", "");
+
+    if (error) {
+      // 削除に失敗した場合はエラーを表示する
+      alert("削除に失敗しました。通信状態を確認してください。\n" + error.message);
+      return;
+    }
+
+    // 削除成功後：画面上の表示をすべてリセットする
+    await renderList();
+    await calcBalance();
+
+    alert("すべてのデータを削除しました。新しい年度のデータを入力してください。");
+
   });
 
 }
@@ -603,6 +781,15 @@ async function setupExportTab() {
       return item.date.slice(0, 7) === selectedMonth;
     });
     exportCSV(filtered, selectedMonth);
+  };
+
+  // 年度セレクトボックスの選択肢を生成する
+  updateYearSelect(transactions);
+
+  // Excelダウンロードボタンのクリック処理を登録する
+  document.getElementById("btn-export-excel").onclick = function () {
+    const selectedYear = document.getElementById("select-excel-year").value;
+    exportExcel(selectedYear, transactions);
   };
 
 }
@@ -651,7 +838,7 @@ function exportCSV(transactions, label) {
     .map(function (item) {
       return [
         item.date,
-        item.type === "income" ? "収入" : "支出",
+        item.type === "income" ? "歳入" : "歳出",
         item.category,
         item.amount,
         item.note || ""
@@ -667,8 +854,8 @@ function exportCSV(transactions, label) {
     .reduce(function (sum, i) { return sum + i.amount; }, 0);
 
   rows.push(["", "", "", "", ""]);
-  rows.push(["収入合計", "", "", totalIncome, ""]);
-  rows.push(["支出合計", "", "", totalExpense, ""]);
+  rows.push(["歳入合計", "", "", totalIncome, ""]);
+  rows.push(["歳出合計", "", "", totalExpense, ""]);
   rows.push(["残高", "", "", totalIncome - totalExpense, ""]);
 
   const allRows = [header].concat(rows);
@@ -691,5 +878,185 @@ function exportCSV(transactions, label) {
   URL.revokeObjectURL(url);
 
   console.log("CSV出力完了：" + link.download);
+
+}
+
+// =============================================
+// Phase 6：年度セレクトボックスの選択肢を生成する
+// =============================================
+function updateYearSelect(transactions) {
+
+  // データから年を取り出してユニークにする
+  const yearSet = new Set(
+    transactions.map(function (item) {
+      return item.date.slice(0, 4);
+    })
+  );
+
+  // 降順（新しい年が先頭）に並べる
+  const years = Array.from(yearSet).sort(function (a, b) {
+    return b.localeCompare(a);
+  });
+
+  const select = document.getElementById("select-excel-year");
+  select.innerHTML = "";
+
+  // 年度ごとに選択肢を追加する
+  years.forEach(function (year) {
+    const reiwa = Number(year) - 2018;
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year + "年（令和" + reiwa + "年）";
+    select.appendChild(option);
+  });
+
+}
+
+// =============================================
+// Phase 6：西暦を令和に変換する
+// =============================================
+function toReiwa(year) {
+  return Number(year) - 2018;
+}
+
+// =============================================
+// Phase 6：ExcelJSでkaikei_format.xlsxを読み込み、
+// 罫線・行高さを保持したままデータを書き込んでダウンロードする
+// 引数 year：出力対象の年（例："2025"）
+// 引数 allTransactions：全データ配列
+// =============================================
+async function exportExcel(year, allTransactions) {
+
+  // ---- kaikei_format.xlsxをテンプレートとして読み込む ----
+  var arrayBuffer;
+  try {
+    var response = await fetch('./kaikei_format.xlsx');
+    if (!response.ok) throw new Error('ステータス ' + response.status);
+    arrayBuffer = await response.arrayBuffer();
+  } catch (e) {
+    alert('テンプレート（kaikei_format.xlsx）の読み込みに失敗しました。\n' + e.message);
+    return;
+  }
+
+  // ExcelJSでworkbookを開く（罫線・書式を完全保持）
+  var workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(arrayBuffer);
+
+  var reiwa = toReiwa(year);
+
+  // ---- 対象年のデータを絞り込む ----
+  var transactions = allTransactions.filter(function (item) {
+    return item.date.startsWith(year);
+  });
+
+  if (transactions.length === 0) {
+    alert('対象年度のデータがありません。');
+    return;
+  }
+
+  // =============================================
+  // 収支（前期）シート：1〜6月のデータを書き込む
+  // テンプレートのR5からデータを入れる（ExcelJSは1-indexed）
+  // =============================================
+  var wsZenki = workbook.getWorksheet('収支（前期）');
+  wsZenki.getCell('A1').value = '令和　' + reiwa + '年　黒鳥三番組収支会計報告書（前期）';
+
+  var zenkiRows = transactions
+    .filter(function (item) { return Number(item.date.slice(5, 7)) <= 6; })
+    .sort(function (a, b) { return a.date.localeCompare(b.date); })
+    .map(function (item) {
+      return [
+        Number(item.date.slice(5, 7)),                        // 月
+        Number(item.date.slice(8, 10)),                       // 日
+        item.type === 'income'  ? item.amount : null,         // 歳入（円）
+        item.type === 'expense' ? item.amount : null,         // 歳出（円）
+        item.note || '',                                      // 摘要
+        item.category                                         // 項目
+      ];
+    });
+
+  excelFillRows(wsZenki, zenkiRows, 5);  // R5（1-indexed）から書き込む
+
+  // =============================================
+  // 収支（後期）シート：7〜12月のデータを書き込む
+  // =============================================
+  var wsKoki = workbook.getWorksheet('収支（後期）');
+  wsKoki.getCell('A1').value = '令和　' + reiwa + '年　黒鳥三番組収支会計報告書（後期）';
+
+  var kokiRows = transactions
+    .filter(function (item) { return Number(item.date.slice(5, 7)) >= 7; })
+    .sort(function (a, b) { return a.date.localeCompare(b.date); })
+    .map(function (item) {
+      return [
+        Number(item.date.slice(5, 7)),
+        Number(item.date.slice(8, 10)),
+        item.type === 'income'  ? item.amount : null,
+        item.type === 'expense' ? item.amount : null,
+        item.note || '',
+        item.category
+      ];
+    });
+
+  excelFillRows(wsKoki, kokiRows, 5);
+
+  // =============================================
+  // ダウンロードする（FileSaverを使う）
+  // =============================================
+  var buffer = await workbook.xlsx.writeBuffer();
+  var blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, '自治会会計_令和' + reiwa + '年.xlsx');
+
+  console.log('Excel出力完了：自治会会計_令和' + reiwa + '年.xlsx');
+
+}
+
+// =============================================
+// Phase 6補助：シートのデータ行にSupabaseデータを書き込む
+// テンプレートのデータ行（startRow）のスタイル（罫線・行高さ）を
+// 後続の行にコピーして、書式を統一する
+// 引数 ws：ExcelJSのワークシートオブジェクト
+// 引数 rows：書き込むデータ配列（[月, 日, 歳入, 歳出, 摘要, 項目]）
+// 引数 startRow：書き込み開始行（1-indexed）
+// =============================================
+function excelFillRows(ws, rows, startRow) {
+
+  // テンプレートのデータ行（startRow = R5）の情報を取得する
+  var templateRow = ws.getRow(startRow);
+
+  for (var i = 0; i < rows.length; i++) {
+    var rowNum = startRow + i;
+    var row = rows[i];
+    var excelRow = ws.getRow(rowNum);
+
+    // startRow より後の行は、テンプレート行のスタイルをコピーする
+    if (i > 0) {
+      // テンプレート行と同じ高さに設定する
+      excelRow.height = templateRow.height;
+
+      // テンプレート行の各セル（A〜F列）のスタイルをコピーする
+      for (var col = 1; col <= 6; col++) {
+        var srcCell = templateRow.getCell(col);
+        var dstCell = excelRow.getCell(col);
+        // JSON経由でスタイルをディープコピーする（参照にならないように）
+        try {
+          dstCell.style = JSON.parse(JSON.stringify(srcCell.style));
+        } catch (e) {
+          // スタイルコピー失敗は無視する
+        }
+      }
+    }
+
+    // 値を書き込む
+    excelRow.getCell(1).value = row[0];                                   // 月（数値）
+    excelRow.getCell(2).value = row[1];                                   // 日（数値）
+    excelRow.getCell(3).value = (row[2] !== null) ? row[2] : null;        // 歳入（円）
+    excelRow.getCell(4).value = (row[3] !== null) ? row[3] : null;        // 歳出（円）
+    excelRow.getCell(5).value = row[4] || '';                             // 摘要
+    excelRow.getCell(6).value = row[5] || '';                             // 項目
+
+    excelRow.commit();
+  }
 
 }

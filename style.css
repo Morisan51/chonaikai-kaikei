@@ -316,6 +316,129 @@ body {
   background-color: #ffebee;
 }
 
+/* ----- Phase 5: 出力タブ ----- */
+
+/* メインカード：Excelダウンロード */
+.export-main-card {
+  /* 濃い緑の枠線で一番目立たせる */
+  border: 3px solid #2e7d32;
+  border-radius: 12px;
+  padding: 24px;
+  background-color: #f1f8f1;
+  margin-bottom: 24px;
+}
+
+.export-main-card__label {
+  /* 「総会資料はこちら」ラベル */
+  display: inline-block;
+  background-color: #2e7d32;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.export-main-card__title {
+  /* タイトルを大きく表示する */
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #1b5e20;
+  margin-bottom: 8px;
+}
+
+.export-main-card__desc {
+  /* 説明文 */
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+.export-main-card__row {
+  /* 年度セレクトとボタンを横並びにする */
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.export-main-card__select {
+  /* 年度セレクト */
+  flex: 1;
+  max-width: 160px;
+}
+
+.export-main-btn {
+  /* Excelダウンロードボタン：大きく目立たせる */
+  padding: 14px 28px;
+  background-color: #217346;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.export-main-btn:hover {
+  background-color: #185a37;
+}
+
+/* サブセクション：CSV出力 */
+.export-sub-section {
+  /* 薄いグレーで区別する */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fafafa;
+  margin-bottom: 0;
+}
+
+.export-sub-section__title {
+  /* 小見出し */
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.export-sub-row {
+  /* 全件・月別を横並びにする */
+  display: flex;
+  gap: 12px;
+}
+
+.export-sub-row .export-card {
+  /* 均等に広げる */
+  flex: 1;
+}
+
+.export-card__col {
+  /* 月選択とボタンを縦並びにする */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* スマホではサブCSVカードを縦並びに */
+@media (max-width: 480px) {
+  .export-sub-row {
+    flex-direction: column;
+  }
+
+  .export-main-card__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-main-card__select {
+    max-width: 100%;
+  }
+}
+
 /* ----- Phase 5: CSV出力 ----- */
 
 .export-info {
@@ -409,6 +532,16 @@ body {
   background-color: #0d47a1;
 }
 
+.export-btn--excel {
+  /* Excel出力ボタン：深緑（Excelカラー） */
+  background-color: #217346;
+  color: white;
+}
+
+.export-btn--excel:hover {
+  background-color: #185a37;
+}
+
 /* ----- Phase 4: 集計 ----- */
 
 .summary__subtitle {
@@ -419,6 +552,86 @@ body {
   padding-left: 8px;
   /* 左に緑のボーダーを付けてアクセントにする */
   border-left: 4px solid #2e7d32;
+}
+
+/* ----- 月別集計：アコーディオン ----- */
+
+.month-block {
+  /* 各月のブロック */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.month-block__btn {
+  /* 月名ボタン（タップで開閉） */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #f9f9f9;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.month-block__btn:hover {
+  background-color: #f0f0f0;
+}
+
+.month-block__name {
+  /* 月の表示（2025-01 など） */
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.month-block__summary {
+  /* 収支合計（右側に表示） */
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.month-block__arrow {
+  /* 開閉矢印 */
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.month-block__detail {
+  /* 詳細エリア（開いたときに表示） */
+  padding: 12px 16px;
+  background-color: white;
+  border-top: 1px solid #eee;
+}
+
+.month-block__row {
+  /* 歳入・歳出・収支の各行 */
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 0.95rem;
+}
+
+.month-block__row--net {
+  /* 収支行：少し強調する */
+  border-bottom: none;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.month-block__label {
+  color: #666;
+}
+
+.month-block__amount {
+  font-weight: bold;
 }
 
 /* カテゴリ別集計：バーチャート */
@@ -493,6 +706,19 @@ body {
 .monthly-minus {
   color: #c62828;
   font-weight: bold;
+}
+
+/* ----- 収支入力タブ：注意書き ----- */
+.input-note {
+  /* 薄い黄色背景で目に入りやすくする */
+  background-color: #fffde7;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 20px;
 }
 
 /* ----- Phase 2: 入力フォーム ----- */
@@ -660,6 +886,51 @@ body {
   background-color: #ffebee;
   color: #c62828;
   border: 1px solid #ef9a9a;
+}
+
+/* ----- 年度リセットカード ----- */
+
+.reset-card {
+  /* 赤系の枠線で危険操作であることを示す */
+  border: 2px solid #ef9a9a;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff8f8;
+  margin-top: 32px;
+}
+
+.reset-card__title {
+  /* タイトル：赤で警告感を出す */
+  font-size: 1rem;
+  font-weight: bold;
+  color: #c62828;
+  margin-bottom: 8px;
+}
+
+.reset-card__desc {
+  /* 説明文 */
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+.reset-btn {
+  /* 削除ボタン：赤背景 */
+  padding: 10px 20px;
+  background-color: #c62828;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-btn:hover {
+  /* ホバー時：さらに濃い赤 */
+  background-color: #b71c1c;
 }
 
 /* ----- フッター ----- */
